@@ -3,13 +3,11 @@ databases:
     databaseName: mondev
     user: mondev_user
     plan: free
-    region: singapore
 
 services:
   - type: web
     name: mondev-backend
     runtime: python
-    region: singapore
     plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
@@ -29,7 +27,6 @@ services:
   - type: web
     name: mondev-frontend
     runtime: node
-    region: singapore
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
