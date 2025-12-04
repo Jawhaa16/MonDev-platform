@@ -1,97 +1,75 @@
 # MonDev.mn - Render Deployment Guide
 
-Энэхүү заавар нь MonDev платформыг Render.com дээр байршуулах алхмуудыг тайлбарлана.
+Таны код GitHub дээр бэлэн болсон тул одоо Render.com дээр байршуулцгаая. Бид **Blueprint** ашиглах тул маш хялбар байна.
 
-## Урьдчилсан нөхцөл
-1. GitHub дээр кодоо push хийсэн байх.
-2. Render.com дээр бүртгэлтэй байх.
+## Арга 1: Blueprint ашиглах (Санал болгож байна 🌟)
 
----
+Энэ арга нь Database, Backend, Frontend гурвыг автоматаар холбож үүсгэнэ.
 
-## Алхам 1: Database үүсгэх (PostgreSQL)
+### Алхам 1: Render дээр Blueprint үүсгэх
+1. [Render Dashboard](https://dashboard.render.com/) руу орно.
+2. Баруун дээд буланд **New +** товчийг дараад **Blueprint**-ийг сонгоно.
+3. GitHub repository-оо жагсаалтаас олоод **Connect** дарна.
+4. **Service Group Name** дээр `mondev-platform` гэж бичнэ.
+5. **Apply** товчийг дарна.
 
-1. Render Dashboard руу ороод **New +** товчийг дараад **PostgreSQL**-г сонгоно.
-2. **Name**: `mondev-db` (эсвэл хүссэн нэрээ өгнө).
-3. **Database**: `mondev`
-4. **User**: `mondev_user`
-5. **Region**: `Singapore` (Монголтой хамгийн ойр нь) эсвэл `Frankfurt`.
-6. **Plan**: `Free` (туршилтад) эсвэл `Starter`.
-7. **Create Database** товчийг дарна.
-8. Үүссэний дараа **Internal Database URL** болон **External Database URL**-ийг хуулж авна.
+Render автоматаар `render.yaml` файлыг уншиж, бүх зүйлийг үүсгэж эхэлнэ. Энэ процесс 5-10 минут үргэлжилнэ.
 
----
+### Алхам 2: Database тохиргоо (Migration)
+Deploy хийгдэж дууссаны дараа (бүгд ногоон болох үед) Database хоосон байгаа тул хүснэгтүүдийг үүсгэх хэрэгтэй.
 
-## Алхам 2: Backend үүсгэх (Web Service)
+1. Render Dashboard дээр **mondev-backend** service рүү орно.
+2. **Shell** цэс рүү орно.
+3. Дараах командыг бичээд Enter дарна:
+   ```bash
+   alembic upgrade head
+   ```
+   *Хэрэв алдаа гарвал:*
+   ```bash
+   python -c "import asyncio; from app.database import engine, Base; asyncio.run(engine.begin().__aenter__().run_sync(Base.metadata.create_all))"
+   ```
 
-1. Render Dashboard -> **New +** -> **Web Service**.
-2. GitHub repository-оо сонгоно.
-3. Тохиргоог дараах байдлаар хийнэ:
-   - **Name**: `mondev-backend`
-   - **Region**: Database-тэй ижил region сонгоно.
-   - **Branch**: `main` (эсвэл таны код байгаа branch).
-   - **Root Directory**: `backend` (⚠️ Чухал: backend фолдер дотор байгаа тул).
-   - **Runtime**: `Python 3`.
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port 10000`
-4. **Environment Variables** хэсэгт дараах хувьсагчдыг нэмнэ:
-   - `DATABASE_URL`: (Алхам 1 дээр авсан **Internal Database URL**)
-     - ⚠️ Анхаар: URL нь `postgres://` гэж эхэлж байвал `postgresql+asyncpg://` болгож өөрчлөөрэй.
-   - `SECRET_KEY`: (Дурын урт нууц үг, жишээ нь: `supersecretkey123`)
-   - `ENVIRONMENT`: `production`
-   - `CORS_ORIGINS`: `https://mondev-frontend.onrender.com` (Frontend үүсгэсний дараа энэ URL-г шинэчлэх хэрэгтэй болно, одоохондоо `*` тавьж болно).
-5. **Create Web Service** дарна.
+### Алхам 3: CORS тохиргоог шинэчлэх
+Blueprint ашиглахад Frontend URL автоматаар үүсдэг тул Backend-д энэ URL-ийг таниулах хэрэгтэй.
+
+1. Render Dashboard -> **mondev-frontend** руу ороод зүүн дээд талд байгаа URL-ийг хуулж авна (жишээ нь: `https://mondev-frontend-xyz.onrender.com`).
+2. **mondev-backend** -> **Environment** цэс рүү орно.
+3. `CORS_ORIGINS` гэсэн хувьсагчийг хайж олоод, утгыг нь хуулж авсан URL-ээрээ солино. (Одоогоор `*` байгаа тул ажиллана, гэхдээ аюулгүй байдлын үүднээс солих нь дээр).
 
 ---
 
-## Алхам 3: Frontend үүсгэх (Web Service)
+## Арга 2: Гараар үүсгэх (Manual)
 
-1. Render Dashboard -> **New +** -> **Web Service**.
-2. GitHub repository-оо сонгоно (Backend-тэй ижил repo).
-3. Тохиргоо:
-   - **Name**: `mondev-frontend`
-   - **Region**: Database/Backend-тэй ижил.
-   - **Branch**: `main`
-   - **Root Directory**: `frontend` (⚠️ Чухал).
-   - **Runtime**: `Node`
-   - **Build Command**: `npm install && npm run build`
-   - **Start Command**: `npm start`
-4. **Environment Variables**:
-   - `NEXT_PUBLIC_API_URL`: (Алхам 2 дээр үүссэн Backend URL, жишээ нь: `https://mondev-backend.onrender.com`)
-     - ⚠️ Төгсгөлд нь `/` тэмдэгт **байхгүй** байх ёстой.
-5. **Create Web Service** дарна.
+Хэрэв Blueprint болохгүй бол энэ аргыг ашиглаарай.
+
+### 1. Database үүсгэх
+1. **New +** -> **PostgreSQL**.
+2. Name: `mondev-db`, Region: `Singapore`.
+3. Үүссэний дараа **Internal Database URL**-ийг хуулж авна.
+
+### 2. Backend үүсгэх
+1. **New +** -> **Web Service**.
+2. Repo сонгоно.
+3. Name: `mondev-backend`, Runtime: `Python`.
+4. Root Directory: `backend`.
+5. Build Command: `pip install -r requirements.txt`.
+6. Start Command: `uvicorn app.main:app --host 0.0.0.0 --port 10000`.
+7. **Environment Variables** нэмнэ:
+   - `DATABASE_URL`: (Internal Database URL)
+   - `SECRET_KEY`: (Дурын нууц үг)
+   - `CORS_ORIGINS`: `*`
+
+### 3. Frontend үүсгэх
+1. **New +** -> **Web Service**.
+2. Repo сонгоно.
+3. Name: `mondev-frontend`, Runtime: `Node`.
+4. Root Directory: `frontend`.
+5. Build Command: `npm install && npm run build`.
+6. Start Command: `npm start`.
+7. **Environment Variables** нэмнэ:
+   - `NEXT_PUBLIC_API_URL`: (Backend URL, жишээ нь `https://mondev-backend.onrender.com`)
 
 ---
 
-## Алхам 4: Холболтыг шалгах
-
-1. Frontend deploy хийгдэж дууссаны дараа Backend-ийн `CORS_ORIGINS` тохиргоог шинэчилнэ.
-   - Backend service -> Environment -> `CORS_ORIGINS` -> Frontend URL-ээ оруулна (жишээ нь: `https://mondev-frontend.onrender.com`).
-2. Frontend URL руу орж бүртгүүлэх, нэвтрэх үйлдлүүдийг шалгана.
-
-## Нийтлэг алдаанууд
-
-- **Database Connection Error**: `DATABASE_URL` буруу эсвэл `postgresql+asyncpg://` protocol ашиглаагүй үед гарна.
-- **CORS Error**: Backend дээр `CORS_ORIGINS` тохиргоо дутуу эсвэл буруу үед гарна.
-- **Build Failed**: `Root Directory`-г буруу заасан үед гарна.
-
-## Database Migration (Хүснэгтүүд үүсгэх)
-
-Backend deploy хийгдсэний дараа database хоосон байна. Хүснэгтүүдийг үүсгэхийн тулд Render дээрх Backend service-ийн **Shell** цэс рүү ороод дараах тушаалыг бичнэ:
-
-```bash
-alembic upgrade head
-```
-
-Хэрэв alembic ашиглаагүй бол Python консол руу орж үүсгэж болно:
-
-```bash
-python
->>> import asyncio
->>> from app.database import engine, Base
->>> async def init_db():
-...     async with engine.begin() as conn:
-...         await conn.run_sync(Base.metadata.create_all)
-...
->>> asyncio.run(init_db())
->>> exit()
-```
+## Амжилт! 🚀
+Одоо таны вэбсайт дэлхий даяар нээлттэй боллоо.
