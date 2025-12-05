@@ -11,9 +11,15 @@ export default function InstructorsPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [instructors, setInstructors] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
 
     useEffect(() => {
         fetchInstructors()
+        // Check if user is logged in
+        const token = localStorage.getItem('access_token')
+        if (token) {
+            setIsLoggedIn(true)
+        }
     }, [])
 
     const fetchInstructors = async () => {
@@ -32,7 +38,6 @@ export default function InstructorsPage() {
         .filter(instructor => {
             const matchesSearch =
                 instructor.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                instructor.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 instructor.bio?.toLowerCase().includes(searchQuery.toLowerCase())
             return matchesSearch
         })
@@ -102,9 +107,10 @@ export default function InstructorsPage() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {filteredInstructors.map(instructor => (
-                                    <div
+                                    <Link
                                         key={instructor.id}
-                                        className="group bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-accent transition-all duration-300 hover:shadow-xl hover:shadow-accent/20"
+                                        href={`/instructors/${instructor.id}`}
+                                        className="group bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-accent transition-all duration-300 hover:shadow-xl hover:shadow-accent/20 block cursor-pointer"
                                     >
                                         {/* Instructor Image */}
                                         <div className="relative h-64 bg-gradient-to-br from-accent/20 to-blue-600/20 overflow-hidden">
@@ -128,9 +134,7 @@ export default function InstructorsPage() {
                                             <h3 className="text-xl font-bold text-white mb-1">
                                                 {instructor.full_name || 'Багш'}
                                             </h3>
-                                            <p className="text-accent text-sm mb-3">
-                                                {instructor.email}
-                                            </p>
+                                            {/* Email removed for privacy */}
                                             <p className="text-gray-400 text-sm mb-4 line-clamp-2">
                                                 {instructor.bio || 'Танилцуулга байхгүй'}
                                             </p>
@@ -141,7 +145,7 @@ export default function InstructorsPage() {
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </Link>
                                 ))}
                             </div>
                         )}
@@ -149,24 +153,26 @@ export default function InstructorsPage() {
                 </section>
 
                 {/* CTA Section */}
-                <section className="px-4 mt-20">
-                    <div className="max-w-4xl mx-auto">
-                        <div className="bg-gradient-to-r from-accent to-blue-600 rounded-2xl p-8 md:p-12 text-center">
-                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                                Та багш болохыг хүсч байна уу?
-                            </h2>
-                            <p className="text-white/90 text-lg mb-8">
-                                Өөрийн мэдлэг, туршлагаа хуваалцаж, олон мянган хүмүүст хүрээрэй
-                            </p>
-                            <Link
-                                href="/register"
-                                className="inline-block px-8 py-4 bg-white text-accent rounded-lg font-bold hover:bg-gray-100 transition-colors"
-                            >
-                                Багшаар бүртгүүлэх
-                            </Link>
+                {!isLoggedIn && (
+                    <section className="px-4 mt-20">
+                        <div className="max-w-4xl mx-auto">
+                            <div className="bg-gradient-to-r from-accent to-blue-600 rounded-2xl p-8 md:p-12 text-center">
+                                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                                    Та багш болохыг хүсч байна уу?
+                                </h2>
+                                <p className="text-white/90 text-lg mb-8">
+                                    Өөрийн мэдлэг, туршлагаа хуваалцаж, олон мянган хүмүүст хүрээрэй
+                                </p>
+                                <Link
+                                    href="/register"
+                                    className="inline-block px-8 py-4 bg-white text-accent rounded-lg font-bold hover:bg-gray-100 transition-colors"
+                                >
+                                    Багшаар бүртгүүлэх
+                                </Link>
+                            </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
+                )}
             </main>
 
             <Footer />

@@ -14,7 +14,8 @@ class Video(Base):
     description = Column(String, nullable=True)
     video_url = Column(String(500), nullable=False)
     thumbnail_url = Column(String(500), nullable=True)
-    duration = Column(Integer, nullable=True)  # in seconds
+    duration = Column(Integer, nullable=True)  # in minutes
+    order_index = Column(Integer, default=0)
     is_published = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

@@ -162,8 +162,8 @@ export default function ContactPage() {
                                         </svg>
                                     </div>
                                     <h3 className="text-lg font-bold text-white mb-2">И-мэйл</h3>
-                                    <a href="mailto:jawhacntwt@gmail.com" className="text-gray-400 hover:text-accent transition-colors">
-                                        jawhacntwt@gmail.com
+                                    <a href="mailto:support@mondev.mn" className="text-gray-400 hover:text-accent transition-colors">
+                                        support@mondev.mn
                                     </a>
                                 </div>
 
@@ -175,8 +175,8 @@ export default function ContactPage() {
                                         </svg>
                                     </div>
                                     <h3 className="text-lg font-bold text-white mb-2">Утас</h3>
-                                    <a href="tel:+97696215552" className="text-gray-400 hover:text-accent transition-colors">
-                                        96215552
+                                    <a href="tel:+97677000000" className="text-gray-400 hover:text-accent transition-colors">
+                                        +976 7700-0000
                                     </a>
                                 </div>
 

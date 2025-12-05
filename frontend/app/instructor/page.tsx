@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import Card from '@/components/ui/Card'
@@ -15,8 +16,8 @@ export default function InstructorDashboard() {
     const [myCourses, setMyCourses] = useState<any[]>([])
     const [stats, setStats] = useState({
         totalCourses: 0,
-        totalEarnings: 0,
-        totalStudents: 0
+        totalEarnings: 0, // TODO: Add earnings calculation
+        totalStudents: 0  // TODO: Add students count
     })
     const [loading, setLoading] = useState(true)
 
@@ -60,8 +61,8 @@ export default function InstructorDashboard() {
             setMyCourses(response.data.courses || [])
             setStats({
                 totalCourses: response.data.total || 0,
-                totalEarnings: 0, // TODO: Add earnings calculation
-                totalStudents: 0  // TODO: Add students count
+                totalEarnings: 0,
+                totalStudents: 0
             })
         } catch (error) {
             console.error('Failed to fetch courses:', error)
@@ -175,7 +176,19 @@ export default function InstructorDashboard() {
                                         className="flex items-center justify-between p-4 bg-gray-900 rounded-lg hover:bg-gray-800 transition-all"
                                     >
                                         <div className="flex items-center space-x-4">
-                                            <div className="w-20 h-20 bg-gradient-to-br from-gray-700 to-gray-900 rounded-lg"></div>
+                                            {course.thumbnail_url ? (
+                                                <div className="relative w-20 h-20 bg-gray-900 rounded-lg overflow-hidden shrink-0">
+                                                    <Image
+                                                        src={course.thumbnail_url}
+                                                        alt={course.title}
+                                                        fill
+                                                        className="object-cover"
+                                                        sizes="80px"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="w-20 h-20 bg-gradient-to-br from-gray-700 to-gray-900 rounded-lg shrink-0"></div>
+                                            )}
                                             <div>
                                                 <h3 className="font-semibold text-lg mb-1">{course.title}</h3>
                                                 <div className="flex items-center space-x-4 text-sm text-gray-400">
@@ -183,7 +196,7 @@ export default function InstructorDashboard() {
                                                         {course.is_free ? 'Үнэгүй' : `${course.price?.toLocaleString()}₮`}
                                                     </span>
                                                     <span>•</span>
-                                                    <span>{course.videos?.length || 0} видео</span>
+                                                    <span>{course.video_count || 0} видео</span>
                                                     <span>•</span>
                                                     <span className={course.is_published ? 'text-green-400' : 'text-yellow-400'}>
                                                         {course.is_published ? 'Нийтлэгдсэн' : 'Ноорог'}

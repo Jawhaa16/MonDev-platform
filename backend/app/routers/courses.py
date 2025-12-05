@@ -43,6 +43,8 @@ async def create_course(
     await db.commit()
     await db.refresh(course)
     
+    print(f"Created Course: {course.title}, ID: {course.id}, Instructor: {course.instructor_id}")
+    
     return CourseResponse.from_orm(course)
 
 
@@ -52,32 +54,67 @@ async def list_courses(
     page_size: int = 20,
     category: Optional[str] = None,
     is_free: Optional[bool] = None,
-    instructor_id: Optional[UUID] = None,
+    instructor_id: Optional[str] = None,
     db: AsyncSession = Depends(get_db)
 ):
     """List all published courses with pagination."""
     
-    query = select(Course).where(Course.is_published == True)
+    # Subquery to count videos
+    video_count_subquery = (
+        select(func.count(Video.id))
+        .where(Video.course_id == Course.id)
+        .correlate(Course)
+        .scalar_subquery()
+    )
+
+    query = select(Course, User, video_count_subquery.label("video_count")).join(User, Course.instructor_id == User.id)
+    
+    # Only filter by published if not filtering by specific instructor
+    # This allows instructors to see their own draft courses
+    if not instructor_id:
+        query = query.where(Course.is_published == True)
     
     if category:
         query = query.where(Course.category == category)
     if is_free is not None:
         query = query.where(Course.is_free == is_free)
     if instructor_id:
-        query = query.where(Course.instructor_id == instructor_id)
+        query = query.where(Course.instructor_id == str(instructor_id))
     
     # Count total
-    count_query = select(func.count()).select_from(query.subquery())
+    # For count query we need to be careful with the subquery
+    count_query = select(func.count()).select_from(Course)
+    if not instructor_id:
+        count_query = count_query.where(Course.is_published == True)
+    if category:
+        count_query = count_query.where(Course.category == category)
+    if is_free is not None:
+        count_query = count_query.where(Course.is_free == is_free)
+    if instructor_id:
+        count_query = count_query.where(Course.instructor_id == str(instructor_id))
+
     total_result = await db.execute(count_query)
     total = total_result.scalar()
     
     # Pagination
     query = query.offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(query)
-    courses = result.scalars().all()
+    rows = result.all()
+    
+    courses_response = []
+    for row in rows:
+        course = row[0]
+        instructor = row[1]
+        video_count = row[2]
+        
+        course_resp = CourseResponse.from_orm(course)
+        course_resp.video_count = video_count or 0
+        course_resp.instructor_name = instructor.full_name
+        course_resp.instructor_avatar = instructor.profile_image
+        courses_response.append(course_resp)
     
     return CourseListResponse(
-        courses=[CourseResponse.from_orm(c) for c in courses],
+        courses=courses_response,
         total=total,
         page=page,
         page_size=page_size
@@ -90,16 +127,33 @@ async def get_course(
     db: AsyncSession = Depends(get_db)
 ):
     """Get course details."""
-    result = await db.execute(select(Course).where(Course.id == course_id))
-    course = result.scalar_one_or_none()
+    result = await db.execute(
+        select(Course, User)
+        .join(User, Course.instructor_id == User.id)
+        .where(Course.id == str(course_id))
+    )
+    row = result.first()
     
-    if not course:
+    if not row:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Course not found"
         )
     
-    return CourseResponse.from_orm(course)
+    course, instructor = row
+    
+    # Count videos
+    video_count_result = await db.execute(
+        select(func.count()).where(Video.course_id == str(course_id))
+    )
+    video_count = video_count_result.scalar()
+    
+    course_response = CourseResponse.from_orm(course)
+    course_response.video_count = video_count
+    course_response.instructor_name = instructor.full_name
+    course_response.instructor_avatar = instructor.profile_image
+    
+    return course_response
 
 
 @router.put("/{course_id}", response_model=CourseResponse)
@@ -111,7 +165,7 @@ async def update_course(
 ):
     """Update course (instructor only)."""
     
-    result = await db.execute(select(Course).where(Course.id == course_id))
+    result = await db.execute(select(Course).where(Course.id == str(course_id)))
     course = result.scalar_one_or_none()
     
     if not course:
@@ -145,7 +199,7 @@ async def delete_course(
 ):
     """Delete course (instructor only)."""
     
-    result = await db.execute(select(Course).where(Course.id == course_id))
+    result = await db.execute(select(Course).where(Course.id == str(course_id)))
     course = result.scalar_one_or_none()
     
     if not course:
@@ -162,3 +216,19 @@ async def delete_course(
     
     await db.delete(course)
     await db.commit()
+
+
+@router.get("/{course_id}/videos")
+async def get_course_videos(
+    course_id: UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all videos for a course."""
+    from app.schemas.course import VideoResponse
+    
+    result = await db.execute(
+        select(Video).where(Video.course_id == str(course_id)).order_by(Video.order_index)
+    )
+    videos = result.scalars().all()
+    
+    return {"videos": [VideoResponse.from_orm(video) for video in videos]}

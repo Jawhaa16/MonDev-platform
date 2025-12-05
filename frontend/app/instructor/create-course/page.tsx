@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
@@ -8,6 +8,9 @@ import Card from '@/components/ui/Card'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import api from '@/lib/api'
+import { uploadImage, validateImageFile } from '@/lib/upload'
+
+import { toast } from 'react-hot-toast'
 
 export default function CreateCoursePage() {
     const router = useRouter()
@@ -17,8 +20,30 @@ export default function CreateCoursePage() {
         description: '',
         category: '',
         is_free: true,
-        price: ''
+        price: '',
+        thumbnail_url: ''
     })
+    const thumbnailInputRef = useRef<HTMLInputElement>(null)
+
+    const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        const validation = validateImageFile(file)
+        if (!validation.valid) {
+            toast.error(validation.error || 'Буруу файл')
+            return
+        }
+
+        try {
+            const result = await uploadImage(file)
+            setFormData({ ...formData, thumbnail_url: `http://localhost:8000${result.url}` })
+            toast.success('Зураг амжилттай хуулагдлаа')
+        } catch (error) {
+            console.error('Failed to upload thumbnail:', error)
+            toast.error('Thumbnail upload хийхэд алдаа гарлаа')
+        }
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -35,19 +60,19 @@ export default function CreateCoursePage() {
             const response = await api.post('/api/courses', courseData)
             console.log('Course created:', response.data)
 
-            alert('Хичээл амжилттай үүслээ!')
+            toast.success('Хичээл амжилттай үүслээ!')
             router.push(`/instructor`)
         } catch (error: any) {
             console.error('Failed to create course:', error)
             if (error.response) {
                 console.error('Error data:', error.response.data)
-                alert(`Алдаа: ${error.response.data.detail || 'Хичээл үүсгэхэд алдаа гарлаа'}`)
+                toast.error(`Алдаа: ${error.response.data.detail || 'Хичээл үүсгэхэд алдаа гарлаа'}`)
             } else if (error.request) {
                 console.error('Error request:', error.request)
-                alert('Сэрвэртэй холбогдож чадсангүй. Та интернет холболтоо шалгана уу.')
+                toast.error('Сэрвэртэй холбогдож чадсангүй. Та интернет холболтоо шалгана уу.')
             } else {
                 console.error('Error message:', error.message)
-                alert(`Алдаа: ${error.message}`)
+                toast.error(`Алдаа: ${error.message}`)
             }
         } finally {
             setLoading(false)
@@ -85,24 +110,25 @@ export default function CreateCoursePage() {
                                 <textarea
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    placeholder="Хичээлийн тухай дэлгэрэнгүй мэдээлэл..."
-                                    rows={6}
+                                    placeholder="Энэ хичээлийн тухай товч танилцуулга бичнэ үү..."
                                     required
-                                    className="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all resize-none"
+                                    rows={5}
+                                    className="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
                                 />
                             </div>
 
                             {/* Category */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Ангилал
+                                    Ангилал <span className="text-accent">*</span>
                                 </label>
                                 <select
                                     value={formData.category}
                                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:border-accent"
+                                    required
+                                    className="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
                                 >
-                                    <option value="">Сонгох...</option>
+                                    <option value="">Сонгоно уу</option>
                                     <option value="Programming">Programming</option>
                                     <option value="Design">Design</option>
                                     <option value="Business">Business</option>
@@ -111,7 +137,40 @@ export default function CreateCoursePage() {
                                 </select>
                             </div>
 
-                            {/* Price Type */}
+                            {/* Thumbnail Upload */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Хичээлийн зураг (Заавал биш)
+                                </label>
+                                <input
+                                    ref={thumbnailInputRef}
+                                    type="file"
+                                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                                    onChange={handleThumbnailChange}
+                                    className="hidden"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => thumbnailInputRef.current?.click()}
+                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white hover:bg-gray-700 transition-colors"
+                                >
+                                    {formData.thumbnail_url ? 'Зураг солих' : 'Зураг сонгох'}
+                                </button>
+                                {formData.thumbnail_url && (
+                                    <div className="mt-4">
+                                        <img
+                                            src={formData.thumbnail_url}
+                                            alt="Course thumbnail"
+                                            className="w-full h-48 object-cover rounded-lg border border-gray-700"
+                                        />
+                                    </div>
+                                )}
+                                <p className="mt-2 text-sm text-gray-400">
+                                    Хичээлийн зургийг оруулснаар хичээл илүү анхаарал татахуйц болно
+                                </p>
+                            </div>
+
+                            {/* Pricing */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-3">
                                     Төлбөр <span className="text-accent">*</span>
@@ -120,21 +179,20 @@ export default function CreateCoursePage() {
                                 <div className="flex gap-4 mb-4">
                                     <button
                                         type="button"
-                                        onClick={() => setFormData({ ...formData, is_free: true, price: '' })}
-                                        className={`flex-1 px-6 py-3 rounded-lg border-2 transition-all ${formData.is_free
-                                            ? 'border-accent bg-accent/10 text-white'
-                                            : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600'
+                                        onClick={() => setFormData({ ...formData, is_free: true })}
+                                        className={`flex-1 py-3 rounded-lg border-2 font-medium transition-all ${formData.is_free
+                                            ? 'bg-accent border-accent text-white'
+                                            : 'border-gray-700 text-gray-400 hover:border-gray-600'
                                             }`}
                                     >
                                         Үнэгүй
                                     </button>
-
                                     <button
                                         type="button"
                                         onClick={() => setFormData({ ...formData, is_free: false })}
-                                        className={`flex-1 px-6 py-3 rounded-lg border-2 transition-all ${!formData.is_free
-                                            ? 'border-accent bg-accent/10 text-white'
-                                            : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600'
+                                        className={`flex-1 py-3 rounded-lg border-2 font-medium transition-all ${!formData.is_free
+                                            ? 'bg-accent border-accent text-white'
+                                            : 'border-gray-700 text-gray-400 hover:border-gray-600'
                                             }`}
                                     >
                                         Төлбөртэй
@@ -148,34 +206,22 @@ export default function CreateCoursePage() {
                                         value={formData.price}
                                         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                                         placeholder="50000"
-                                        required={!formData.is_free}
+                                        required
+                                        min="0"
                                     />
                                 )}
                             </div>
 
-                            {/* Info Box */}
-                            <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                                <div className="flex items-start space-x-3">
-                                    <svg className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <div className="text-sm text-gray-300">
-                                        Хичээл үүссэний дараа видео нэмж, нийтлэх боломжтой болно.
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Buttons */}
-                            <div className="flex gap-4">
+                            {/* Submit Button */}
+                            <div className="flex gap-4 pt-6 border-t border-gray-800">
                                 <Button
                                     type="button"
-                                    onClick={() => router.back()}
-                                    variant="secondary"
+                                    variant="outline"
+                                    onClick={() => router.push('/instructor')}
                                     className="flex-1"
                                 >
                                     Цуцлах
                                 </Button>
-
                                 <Button
                                     type="submit"
                                     variant="primary"

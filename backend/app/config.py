@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     QPAY_API_URL: str = "https://merchant.qpay.mn/v2"
     
     # CORS
-    CORS_ORIGINS: List[str] = ["*"]
+    CORS_ORIGINS: Union[str, List[str]] = ["*"]
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
@@ -40,7 +40,9 @@ class Settings(BaseSettings):
             if v == "*":
                 return ["*"]
             return [i.strip() for i in v.split(",")]
-        return v
+        elif isinstance(v, list):
+            return v
+        return ["*"]
     
     # File Upload
     MAX_FILE_SIZE: int = 524288000  # 500MB
@@ -56,7 +58,13 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     
     # Platform Fee
+    # Platform Fee
     PLATFORM_FEE_PERCENT: int = 15
+
+    # Cloudinary
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
     
     class Config:
         env_file = ".env"

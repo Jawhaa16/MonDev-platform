@@ -1,15 +1,17 @@
 import Link from 'next/link'
-import Card from '../ui/Card'
+import Image from 'next/image'
 
 interface CourseCardProps {
     id: string
     title: string
     description: string
     thumbnail?: string
-    instructor_name: string
+    instructor_name?: string
+    instructor_avatar?: string
     price?: number
     is_free: boolean
     category?: string
+    video_count?: number
 }
 
 export default function CourseCard({
@@ -17,78 +19,95 @@ export default function CourseCard({
     title,
     description,
     thumbnail,
-    instructor_name,
+    instructor_name = 'Багш',
+    instructor_avatar,
     price,
     is_free,
-    category
+    category,
+    video_count = 0,
 }: CourseCardProps) {
     return (
-        <Link href={`/courses/${id}`}>
-            <Card hover className="h-full flex flex-col">
+        <Link href={`/courses/${id}`} className="block group">
+            <div className="bg-[#1c1c1c] rounded-2xl overflow-hidden border border-gray-800 hover:border-gray-700 transition-all duration-300 hover:shadow-xl hover:shadow-accent/5 flex flex-col h-full">
                 {/* Thumbnail */}
-                <div className="relative w-full h-48 bg-gradient-to-br from-gray-700 to-gray-900 rounded-lg mb-4 overflow-hidden">
+                <div className="relative h-48 w-full bg-gray-900 overflow-hidden shrink-0">
                     {thumbnail ? (
-                        <img
+                        <Image
                             src={thumbnail}
                             alt={title}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                            <svg className="w-16 h-16 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        <div className="absolute inset-0 flex items-center justify-center text-gray-700">
+                            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                         </div>
                     )}
 
                     {/* Category Badge */}
                     {category && (
-                        <div className="absolute top-3 left-3">
-                            <span className="px-3 py-1 bg-black/70 backdrop-blur-sm text-xs font-semibold rounded-full">
+                        <div className="absolute top-4 left-4">
+                            <span className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-xs font-medium border border-white/10">
                                 {category}
                             </span>
                         </div>
                     )}
 
                     {/* Price Badge */}
-                    <div className="absolute top-3 right-3">
-                        {is_free ? (
-                            <span className="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full">
-                                ҮНЭГҮЙ
-                            </span>
-                        ) : (
-                            <span className="px-3 py-1 bg-accent text-white text-xs font-bold rounded-full">
-                                {price?.toLocaleString()}₮
-                            </span>
-                        )}
+                    <div className="absolute top-4 right-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${is_free
+                                ? 'bg-green-500 text-white'
+                                : 'bg-white text-black'
+                            }`}>
+                            {is_free ? 'ҮНЭГҮЙ' : `${price?.toLocaleString()}₮`}
+                        </span>
                     </div>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 flex flex-col">
-                    <h3 className="text-lg font-semibold mb-2 line-clamp-2 hover:text-accent transition-colors">
+                <div className="p-5 flex flex-col flex-1">
+                    <h3 className="text-xl font-bold mb-2 group-hover:text-accent transition-colors line-clamp-1">
                         {title}
                     </h3>
-
-                    <p className="text-sm text-gray-400 mb-4 line-clamp-2 flex-1">
+                    <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-1">
                         {description}
                     </p>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-700">
-                        <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-accent to-blue-600 flex items-center justify-center text-sm font-semibold">
-                                {instructor_name[0]}
-                            </div>
-                            <span className="text-sm text-gray-400">{instructor_name}</span>
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-800 mt-auto">
+                        <div className="flex items-center space-x-3">
+                            {instructor_avatar ? (
+                                <div className="relative w-8 h-8 rounded-full overflow-hidden shrink-0 border border-gray-700">
+                                    <Image
+                                        src={instructor_avatar}
+                                        alt={instructor_name}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-accent to-blue-600 flex items-center justify-center text-sm font-semibold shrink-0">
+                                    {(instructor_name || 'B')[0].toUpperCase()}
+                                </div>
+                            )}
+                            <span className="text-sm text-gray-400 truncate max-w-[100px]">{instructor_name}</span>
                         </div>
 
-                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                        {video_count > 0 && (
+                            <div className="flex items-center text-gray-500 text-xs">
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {video_count} видео
+                            </div>
+                        )}
                     </div>
                 </div>
-            </Card>
+            </div>
         </Link>
     )
 }

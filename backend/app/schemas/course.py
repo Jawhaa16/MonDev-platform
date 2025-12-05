@@ -32,6 +32,9 @@ class CourseResponse(CourseBase):
     is_published: bool
     created_at: datetime
     updated_at: datetime
+    video_count: int = 0
+    instructor_name: Optional[str] = None
+    instructor_avatar: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -51,6 +54,7 @@ class VideoBase(BaseModel):
     video_url: str
     thumbnail_url: Optional[str] = None
     duration: Optional[int] = None
+    order_index: int = 0
 
 
 class VideoCreate(VideoBase):
@@ -63,6 +67,7 @@ class VideoUpdate(BaseModel):
     video_url: Optional[str] = None
     thumbnail_url: Optional[str] = None
     duration: Optional[int] = None
+    order_index: Optional[int] = None
     is_published: Optional[bool] = None
 
 
@@ -73,6 +78,7 @@ class VideoResponse(VideoBase):
     created_at: datetime
     updated_at: datetime
     like_count: Optional[int] = 0
+    is_liked: bool = False
     
     class Config:
         from_attributes = True

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/layout/Header'
@@ -11,6 +11,22 @@ export default function RegisterPage() {
     const router = useRouter()
     const [userType, setUserType] = useState<'viewer' | 'instructor'>('viewer')
     const [isLoading, setIsLoading] = useState(false)
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
+    const [currentUserType, setCurrentUserType] = useState<string | null>(null)
+
+    useEffect(() => {
+        const token = localStorage.getItem('access_token')
+        const userStr = localStorage.getItem('user')
+        if (token && userStr) {
+            setIsLoggedIn(true)
+            try {
+                const user = JSON.parse(userStr)
+                setCurrentUserType(user.user_type)
+            } catch (e) {
+                console.error('Error parsing user data', e)
+            }
+        }
+    }, [])
 
     const handleGoogleRegister = async () => {
         setIsLoading(true)
@@ -25,6 +41,41 @@ export default function RegisterPage() {
             `state=${userType}`
 
         window.location.href = googleAuthUrl
+    }
+
+    if (isLoggedIn) {
+        return (
+            <>
+                <Header />
+                <main className="min-h-screen bg-black pt-24 pb-12 px-4 flex items-center justify-center">
+                    <div className="max-w-md w-full text-center">
+                        <div className="bg-gray-900 p-8 rounded-2xl border border-gray-800 shadow-2xl">
+                            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+
+                            <h1 className="text-2xl font-bold text-white mb-4">
+                                Та аль хэдийн бүртгүүлсэн байна
+                            </h1>
+
+                            <p className="text-gray-400 mb-8">
+                                Та системд нэвтэрсэн байна. Dashboard руу шилжинэ үү.
+                            </p>
+
+                            <Link
+                                href={currentUserType === 'instructor' ? '/instructor' : '/profile'}
+                                className="inline-block w-full px-6 py-3 bg-accent text-white rounded-lg font-semibold hover:bg-blue-600 transition-all"
+                            >
+                                Dashboard руу очих
+                            </Link>
+                        </div>
+                    </div>
+                </main>
+                <Footer />
+            </>
+        )
     }
 
     return (

@@ -20,7 +20,7 @@ export default function AuthCallback() {
             if (errorParam) {
                 setError('Нэвтрэх үйлдэл цуцлагдлаа')
                 setIsProcessing(false)
-                setTimeout(() => router.push('/login'), 3000)
+                // setTimeout(() => router.push('/login'), 3000)
                 return
             }
 
@@ -28,7 +28,7 @@ export default function AuthCallback() {
             if (!code) {
                 setError('Алдаа гарлаа. Дахин оролдоно уу.')
                 setIsProcessing(false)
-                setTimeout(() => router.push('/login'), 3000)
+                // setTimeout(() => router.push('/login'), 3000)
                 return
             }
 
@@ -64,7 +64,8 @@ export default function AuthCallback() {
                 }
                 setError(errorMessage)
                 setIsProcessing(false)
-                setTimeout(() => router.push('/login'), 3000)
+                setIsProcessing(false)
+                // setTimeout(() => router.push('/login'), 3000)
             }
         }
 
@@ -111,9 +112,12 @@ export default function AuthCallback() {
                         <p className="text-gray-400 mb-4">
                             {error}
                         </p>
-                        <p className="text-sm text-gray-500">
-                            Нэвтрэх хуудас руу шилжүүлж байна...
-                        </p>
+                        <button
+                            onClick={() => router.push('/login')}
+                            className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                        >
+                            Нэвтрэх хуудас руу буцах
+                        </button>
                     </>
                 ) : null}
             </div>

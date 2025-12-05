@@ -8,6 +8,8 @@ interface InputProps {
     required?: boolean
     disabled?: boolean
     className?: string
+    helperText?: string
+    min?: string
 }
 
 export default function Input({
@@ -19,7 +21,9 @@ export default function Input({
     error,
     required = false,
     disabled = false,
-    className = ''
+    className = '',
+    helperText,
+    min
 }: InputProps) {
     return (
         <div className="w-full">
@@ -37,6 +41,7 @@ export default function Input({
                 onChange={onChange}
                 required={required}
                 disabled={disabled}
+                min={min}
                 className={`
           w-full px-4 py-3 
           bg-gray-800 text-white 
@@ -51,6 +56,10 @@ export default function Input({
 
             {error && (
                 <p className="mt-1 text-sm text-red-500">{error}</p>
+            )}
+
+            {helperText && !error && (
+                <p className="mt-1 text-sm text-gray-400">{helperText}</p>
             )}
         </div>
     )

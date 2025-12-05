@@ -51,11 +51,6 @@ export default function Footer() {
                                     Холбоо барих
                                 </Link>
                             </li>
-                            <li>
-                                <Link href="/faq" className="text-gray-400 hover:text-white transition-colors text-sm">
-                                    Түгээмэл асуулт
-                                </Link>
-                            </li>
                         </ul>
                     </div>
 

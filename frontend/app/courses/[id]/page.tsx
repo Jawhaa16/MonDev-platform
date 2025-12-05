@@ -28,8 +28,15 @@ export default function CourseDetailPage() {
 
     const fetchCourse = async () => {
         try {
-            const response = await api.get(`/api/courses/${courseId}`)
-            setCourse(response.data)
+            const [courseRes, videosRes] = await Promise.all([
+                api.get(`/api/courses/${courseId}`),
+                api.get(`/api/courses/${courseId}/videos`)
+            ])
+
+            const courseData = courseRes.data
+            const videosData = videosRes.data.videos || []
+
+            setCourse({ ...courseData, videos: videosData })
         } catch (error) {
             console.error('Failed to fetch course:', error)
         } finally {
@@ -135,6 +142,7 @@ export default function CourseDetailPage() {
                                         {course.videos.map((video: any, index: number) => (
                                             <div
                                                 key={video.id}
+                                                onClick={() => router.push(`/watch/${course.id}?videoId=${video.id}`)}
                                                 className="flex items-center justify-between p-4 bg-gray-900 rounded-lg hover:bg-gray-800 transition-all cursor-pointer"
                                             >
                                                 <div className="flex items-center space-x-4">

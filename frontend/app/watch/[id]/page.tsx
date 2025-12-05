@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import Card from '@/components/ui/Card'
 import api from '@/lib/api'
+
+import { toast } from 'react-hot-toast'
 
 export default function VideoPlayerPage() {
     const params = useParams()
@@ -16,6 +18,11 @@ export default function VideoPlayerPage() {
     const [currentVideo, setCurrentVideo] = useState<any>(null)
     const [hasAccess, setHasAccess] = useState(false)
     const [loading, setLoading] = useState(true)
+    const [likeCount, setLikeCount] = useState(0)
+    const [isLiked, setIsLiked] = useState(false)
+
+    const searchParams = useSearchParams()
+    const videoIdParam = searchParams.get('videoId')
 
     useEffect(() => {
         if (courseId) {
@@ -26,17 +33,41 @@ export default function VideoPlayerPage() {
 
     const fetchCourse = async () => {
         try {
-            const response = await api.get(`/api/courses/${courseId}`)
-            setCourse(response.data)
+            const [courseRes, videosRes] = await Promise.all([
+                api.get(`/api/courses/${courseId}`),
+                api.get(`/api/courses/${courseId}/videos`)
+            ])
 
-            // Set first video as current
-            if (response.data.videos && response.data.videos.length > 0) {
-                setCurrentVideo(response.data.videos[0])
+            const courseData = courseRes.data
+            const videosData = videosRes.data.videos || []
+
+            setCourse({ ...courseData, videos: videosData })
+
+            // Set initial video
+            if (videosData.length > 0) {
+                const targetVideoId = videoIdParam && videosData.find((v: any) => v.id === videoIdParam)
+                    ? videoIdParam
+                    : videosData[0].id
+
+                fetchVideoDetails(targetVideoId)
             }
         } catch (error) {
-            console.error('Failed to fetch course:', error)
+            console.error('Failed to fetch course data:', error)
+            toast.error('Хичээлийн мэдээлэл авахад алдаа гарлаа')
         } finally {
             setLoading(false)
+        }
+    }
+
+    const fetchVideoDetails = async (videoId: string) => {
+        try {
+            const response = await api.get(`/api/videos/${videoId}`)
+            const videoData = response.data
+            setCurrentVideo(videoData)
+            setLikeCount(videoData.like_count || 0)
+            setIsLiked(videoData.is_liked || false)
+        } catch (error) {
+            console.error('Failed to fetch video details:', error)
         }
     }
 
@@ -52,10 +83,34 @@ export default function VideoPlayerPage() {
 
     const handleVideoSelect = (video: any) => {
         if (video.is_preview || hasAccess) {
-            setCurrentVideo(video)
+            fetchVideoDetails(video.id)
         } else {
-            alert('Энэ видеог үзэхийн тулд хичээлийг худалдаж авна уу')
+            toast.error('Энэ видеог үзэхийн тулд хичээлийг худалдаж авна уу')
         }
+    }
+
+    const handleLike = async () => {
+        if (!currentVideo) return
+
+        try {
+            if (isLiked) {
+                await api.delete(`/api/videos/${currentVideo.id}/unlike`)
+                setLikeCount(prev => Math.max(0, prev - 1))
+                setIsLiked(false)
+            } else {
+                await api.post(`/api/videos/${currentVideo.id}/like`)
+                setLikeCount(prev => prev + 1)
+                setIsLiked(true)
+            }
+        } catch (error) {
+            console.error('Failed to toggle like:', error)
+            toast.error('Үйлдэл амжилтгүй боллоо')
+        }
+    }
+
+    const handleShare = () => {
+        navigator.clipboard.writeText(window.location.href)
+        toast.success('Линк хуулагдлаа')
     }
 
     if (loading) {
@@ -73,13 +128,19 @@ export default function VideoPlayerPage() {
         )
     }
 
-    if (!course || !currentVideo) {
+    if (!course) {
         return (
             <>
                 <Header />
                 <main className="min-h-screen bg-black pt-24 pb-12 flex items-center justify-center">
                     <div className="text-center">
                         <h1 className="text-4xl font-bold mb-4">Хичээл олдсонгүй</h1>
+                        <button
+                            onClick={() => router.push('/courses')}
+                            className="px-6 py-2 bg-accent text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        >
+                            Хичээлүүд рүү буцах
+                        </button>
                     </div>
                 </main>
             </>
@@ -99,11 +160,12 @@ export default function VideoPlayerPage() {
                                 {/* Video Container */}
                                 <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
                                     <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900 rounded-lg flex items-center justify-center">
-                                        {currentVideo.video_url ? (
+                                        {currentVideo?.video_url ? (
                                             <video
                                                 controls
                                                 className="w-full h-full"
                                                 src={currentVideo.video_url}
+                                                poster={currentVideo.thumbnail_url}
                                             >
                                                 Таны browser видео тоглуулагчийг дэмжихгүй байна.
                                             </video>
@@ -113,7 +175,7 @@ export default function VideoPlayerPage() {
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                <p className="text-gray-400">Видео байхгүй байна</p>
+                                                <p className="text-gray-400">Видео сонгоно уу</p>
                                             </div>
                                         )}
                                     </div>
@@ -122,19 +184,26 @@ export default function VideoPlayerPage() {
 
                             {/* Video Info */}
                             <Card>
-                                <h1 className="text-2xl font-bold mb-2">{currentVideo.title}</h1>
-                                <p className="text-gray-400 mb-4">{currentVideo.description}</p>
+                                <h1 className="text-2xl font-bold mb-2">{currentVideo?.title || course.title}</h1>
+                                <p className="text-gray-400 mb-4">{currentVideo?.description || course.description}</p>
 
                                 {/* Actions */}
                                 <div className="flex items-center gap-4 pt-4 border-t border-gray-700">
-                                    <button className="flex items-center space-x-2 px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-all">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <button
+                                        onClick={handleLike}
+                                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${isLiked ? 'bg-accent text-white' : 'bg-gray-800 hover:bg-gray-700'
+                                            }`}
+                                    >
+                                        <svg className="w-5 h-5" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                         </svg>
-                                        <span>Like</span>
+                                        <span>Like {likeCount > 0 && `(${likeCount})`}</span>
                                     </button>
 
-                                    <button className="flex items-center space-x-2 px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-all">
+                                    <button
+                                        onClick={handleShare}
+                                        className="flex items-center space-x-2 px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-all"
+                                    >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                                         </svg>
@@ -156,13 +225,13 @@ export default function VideoPlayerPage() {
                                         <button
                                             key={video.id}
                                             onClick={() => handleVideoSelect(video)}
-                                            className={`w-full text-left p-3 rounded-lg transition-all ${currentVideo.id === video.id
+                                            className={`w-full text-left p-3 rounded-lg transition-all ${currentVideo?.id === video.id
                                                 ? 'bg-accent text-white'
                                                 : 'bg-gray-800 hover:bg-gray-700'
                                                 }`}
                                         >
                                             <div className="flex items-center space-x-3">
-                                                <div className={`w-8 h-8 rounded flex items-center justify-center font-semibold text-sm ${currentVideo.id === video.id ? 'bg-white/20' : 'bg-gray-700'
+                                                <div className={`w-8 h-8 rounded flex items-center justify-center font-semibold text-sm ${currentVideo?.id === video.id ? 'bg-white/20' : 'bg-gray-700'
                                                     }`}>
                                                     {index + 1}
                                                 </div>

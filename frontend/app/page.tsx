@@ -1,8 +1,27 @@
+'use client'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 
 export default function Home() {
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
+    const [userType, setUserType] = useState<string | null>(null)
+
+    useEffect(() => {
+        const token = localStorage.getItem('access_token')
+        const userStr = localStorage.getItem('user')
+        if (token && userStr) {
+            setIsLoggedIn(true)
+            try {
+                const user = JSON.parse(userStr)
+                setUserType(user.user_type)
+            } catch (e) {
+                console.error('Error parsing user data', e)
+            }
+        }
+    }, [])
+
     return (
         <>
             <Header />
@@ -35,12 +54,21 @@ export default function Home() {
                                 Хичээлүүд үзэх
                             </Link>
 
-                            <Link
-                                href="/register"
-                                className="px-8 py-4 bg-gray-800 text-white rounded-lg font-semibold hover:bg-gray-700 transform hover:scale-105 transition-all border border-gray-700"
-                            >
-                                Бүртгүүлэх
-                            </Link>
+                            {!isLoggedIn ? (
+                                <Link
+                                    href="/register"
+                                    className="px-8 py-4 bg-gray-800 text-white rounded-lg font-semibold hover:bg-gray-700 transform hover:scale-105 transition-all border border-gray-700"
+                                >
+                                    Бүртгүүлэх
+                                </Link>
+                            ) : (
+                                <Link
+                                    href={userType === 'instructor' ? '/instructor' : '/profile'}
+                                    className="px-8 py-4 bg-gray-800 text-white rounded-lg font-semibold hover:bg-gray-700 transform hover:scale-105 transition-all border border-gray-700"
+                                >
+                                    Dashboard
+                                </Link>
+                            )}
                         </div>
 
                         {/* Stats */}
@@ -99,21 +127,23 @@ export default function Home() {
                 </section>
 
                 {/* CTA Section */}
-                <section className="py-20 px-4 bg-black">
-                    <div className="max-w-4xl mx-auto text-center">
-                        <h2 className="text-4xl font-bold mb-6">Өнөөдөр эхлээрэй</h2>
-                        <p className="text-xl text-gray-400 mb-8">
-                            Мэргэжилтэн нарын туршлага, зөвлөгөөг хүртээрэй
-                        </p>
+                {!isLoggedIn && (
+                    <section className="py-20 px-4 bg-black">
+                        <div className="max-w-4xl mx-auto text-center">
+                            <h2 className="text-4xl font-bold mb-6">Өнөөдөр эхлээрэй</h2>
+                            <p className="text-xl text-gray-400 mb-8">
+                                Мэргэжилтэн нарын туршлага, зөвлөгөөг хүртээрэй
+                            </p>
 
-                        <Link
-                            href="/register"
-                            className="inline-block px-10 py-4 bg-gradient-to-r from-accent to-blue-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-accent transform hover:scale-105 transition-all shadow-xl"
-                        >
-                            Бүртгүүлэх
-                        </Link>
-                    </div>
-                </section>
+                            <Link
+                                href="/register"
+                                className="inline-block px-10 py-4 bg-gradient-to-r from-accent to-blue-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-accent transform hover:scale-105 transition-all shadow-xl"
+                            >
+                                Бүртгүүлэх
+                            </Link>
+                        </div>
+                    </section>
+                )}
             </main>
 
             <Footer />

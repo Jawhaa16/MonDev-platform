@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 from app.database import get_db
 from app.models.course import Course
+from app.models.user import User
 from app.schemas.course import CourseListResponse, CourseResponse
 from typing import Optional
 
@@ -27,7 +28,7 @@ async def search_courses(
     Search query (q) searches in title and description.
     """
     
-    query = select(Course).where(Course.is_published == True)
+    query = select(Course, User).join(User, Course.instructor_id == User.id).where(Course.is_published == True)
     
     # Text search
     if q:
@@ -63,7 +64,6 @@ async def search_courses(
         query = query.order_by(Course.created_at.desc())
     
     # Count total results
-    from sqlalchemy import func
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar()
@@ -71,10 +71,20 @@ async def search_courses(
     # Pagination
     query = query.offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(query)
-    courses = result.scalars().all()
+    rows = result.all()
+    
+    courses_response = []
+    for row in rows:
+        course = row[0]
+        instructor = row[1]
+        
+        course_resp = CourseResponse.from_orm(course)
+        course_resp.instructor_name = instructor.full_name
+        course_resp.instructor_avatar = instructor.profile_image
+        courses_response.append(course_resp)
     
     return CourseListResponse(
-        courses=[CourseResponse.from_orm(c) for c in courses],
+        courses=courses_response,
         total=total,
         page=page,
         page_size=page_size

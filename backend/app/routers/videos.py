@@ -7,7 +7,8 @@ from app.models.course import Course
 from app.models.video import Video
 from app.models.interaction import Like
 from app.schemas.course import VideoCreate, VideoUpdate, VideoResponse
-from app.routers.auth import get_current_user
+from typing import Optional
+from app.routers.auth import get_current_user, get_current_user_optional
 from uuid import UUID
 import aiofiles
 import os
@@ -25,7 +26,7 @@ async def create_video(
     """Create a new video for a course."""
     
     # Check if course exists and belongs to current user
-    result = await db.execute(select(Course).where(Course.id == video_data.course_id))
+    result = await db.execute(select(Course).where(Course.id == str(video_data.course_id)))
     course = result.scalar_one_or_none()
     
     if not course:
@@ -51,10 +52,11 @@ async def create_video(
 @router.get("/{video_id}", response_model=VideoResponse)
 async def get_video(
     video_id: UUID,
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """Get video details."""
-    result = await db.execute(select(Video).where(Video.id == video_id))
+    result = await db.execute(select(Video).where(Video.id == str(video_id)))
     video = result.scalar_one_or_none()
     
     if not video:
@@ -65,12 +67,25 @@ async def get_video(
     
     # Get like count
     like_count_result = await db.execute(
-        select(func.count()).where(Like.video_id == video_id)
+        select(func.count()).where(Like.video_id == str(video_id))
     )
     like_count = like_count_result.scalar()
     
+    # Check if liked by current user
+    is_liked = False
+    if current_user:
+        user_like = await db.execute(
+            select(Like).where(
+                Like.user_id == current_user.id,
+                Like.video_id == str(video_id)
+            )
+        )
+        if user_like.scalar_one_or_none():
+            is_liked = True
+    
     video_response = VideoResponse.from_orm(video)
     video_response.like_count = like_count
+    video_response.is_liked = is_liked
     
     return video_response
 
@@ -84,7 +99,7 @@ async def like_video(
     """Like a video."""
     
     # Check if video exists
-    result = await db.execute(select(Video).where(Video.id == video_id))
+    result = await db.execute(select(Video).where(Video.id == str(video_id)))
     video = result.scalar_one_or_none()
     
     if not video:
@@ -97,7 +112,7 @@ async def like_video(
     like_result = await db.execute(
         select(Like).where(
             Like.user_id == current_user.id,
-            Like.video_id == video_id
+            Like.video_id == str(video_id)
         )
     )
     existing_like = like_result.scalar_one_or_none()
@@ -108,7 +123,7 @@ async def like_video(
             detail="Already liked this video"
         )
     
-    like = Like(user_id=current_user.id, video_id=video_id)
+    like = Like(user_id=current_user.id, video_id=str(video_id))
     db.add(like)
     await db.commit()
     
@@ -126,7 +141,7 @@ async def unlike_video(
     result = await db.execute(
         select(Like).where(
             Like.user_id == current_user.id,
-            Like.video_id == video_id
+            Like.video_id == str(video_id)
         )
     )
     like = result.scalar_one_or_none()
@@ -149,7 +164,7 @@ async def delete_video(
 ):
     """Delete video (instructor only)."""
     
-    result = await db.execute(select(Video).where(Video.id == video_id))
+    result = await db.execute(select(Video).where(Video.id == str(video_id)))
     video = result.scalar_one_or_none()
     
     if not video:
@@ -159,7 +174,7 @@ async def delete_video(
         )
     
     # Check if user owns the course
-    course_result = await db.execute(select(Course).where(Course.id == video.course_id))
+    course_result = await db.execute(select(Course).where(Course.id == str(video.course_id)))
     course = course_result.scalar_one_or_none()
     
     if course.instructor_id != current_user.id:

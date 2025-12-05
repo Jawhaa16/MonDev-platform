@@ -9,6 +9,7 @@ from app.schemas.user import UserCreate, UserResponse, TokenResponse, GoogleAuth
 from app.utils.security import create_access_token, create_refresh_token, verify_token
 from app.config import settings
 import httpx
+from typing import Optional
 
 router = APIRouter()
 security = HTTPBearer()
@@ -57,12 +58,45 @@ async def get_current_user(
     return user
 
 
+security_optional = HTTPBearer(auto_error=False)
+
+async def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_optional),
+    db: AsyncSession = Depends(get_db)
+) -> Optional[User]:
+    """Get current authenticated user from JWT token if present."""
+    if not credentials:
+        return None
+        
+    token = credentials.credentials
+    try:
+        payload = verify_token(token)
+        if not payload or payload.get("type") != "access":
+            return None
+            
+        user_id = payload.get("sub")
+        if not user_id:
+            return None
+            
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        
+        if not user or not user.is_active:
+            return None
+            
+        return user
+    except Exception:
+        return None
+
+
 @router.post("/google/callback", response_model=TokenResponse)
 async def google_callback(
     auth_data: GoogleAuthRequest,
     db: AsyncSession = Depends(get_db)
 ):
     """Handle Google OAuth callback and create/login user."""
+    print(f"Received Google Callback with code: {auth_data.code[:10]}...")
+    print(f"Using Redirect URI: {settings.GOOGLE_REDIRECT_URI}")
     
     # Exchange authorization code for tokens
     async with httpx.AsyncClient() as client:
@@ -78,8 +112,10 @@ async def google_callback(
         )
         
         if token_response.status_code != 200:
-            print(f"Google Token Error: {token_response.text}")
+            print(f"Google Token Error Status: {token_response.status_code}")
+            print(f"Google Token Error Body: {token_response.text}")
             print(f"Sent Redirect URI: {settings.GOOGLE_REDIRECT_URI}")
+            print(f"Sent Client ID: {settings.GOOGLE_CLIENT_ID}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Failed to get access token from Google: {token_response.text}"

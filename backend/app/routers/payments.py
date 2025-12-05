@@ -209,14 +209,14 @@ async def get_payment_history(
 
 @router.get("/check-access/{course_id}")
 async def check_course_access(
-    course_id: UUID,
+    course_id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Check if user has access to a course."""
     
     # Get course
-    result = await db.execute(select(Course).where(Course.id == course_id))
+    result = await db.execute(select(Course).where(Course.id == str(course_id)))
     course = result.scalar_one_or_none()
     
     if not course:

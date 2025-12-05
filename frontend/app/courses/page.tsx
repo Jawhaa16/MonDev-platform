@@ -85,8 +85,8 @@ export default function CoursesPage() {
                             <button
                                 onClick={() => setPriceFilter('all')}
                                 className={`px-4 py-2 rounded-lg transition-all ${priceFilter === 'all'
-                                        ? 'bg-accent text-white'
-                                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                    ? 'bg-accent text-white'
+                                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                                     }`}
                             >
                                 Бүгд
@@ -94,8 +94,8 @@ export default function CoursesPage() {
                             <button
                                 onClick={() => setPriceFilter('free')}
                                 className={`px-4 py-2 rounded-lg transition-all ${priceFilter === 'free'
-                                        ? 'bg-accent text-white'
-                                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                    ? 'bg-accent text-white'
+                                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                                     }`}
                             >
                                 Үнэгүй
@@ -103,8 +103,8 @@ export default function CoursesPage() {
                             <button
                                 onClick={() => setPriceFilter('paid')}
                                 className={`px-4 py-2 rounded-lg transition-all ${priceFilter === 'paid'
-                                        ? 'bg-accent text-white'
-                                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                    ? 'bg-accent text-white'
+                                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                                     }`}
                             >
                                 Төлбөртэй
@@ -146,11 +146,13 @@ export default function CoursesPage() {
                                     id={course.id}
                                     title={course.title}
                                     description={course.description}
-                                    thumbnail={course.thumbnail}
-                                    instructor_name={course.instructor_name || 'Багш'}
+                                    thumbnail={course.thumbnail_url}
+                                    instructor_name={course.instructor_name}
+                                    instructor_avatar={course.instructor_avatar}
                                     price={course.price}
                                     is_free={course.is_free}
                                     category={course.category}
+                                    video_count={course.video_count}
                                 />
                             ))}
                         </div>

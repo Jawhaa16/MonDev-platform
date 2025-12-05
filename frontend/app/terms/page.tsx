@@ -100,7 +100,7 @@ export default function TermsPage() {
                                         <li>Техникийн асуудлаас болж хичээл үзэх боломжгүй байсан</li>
                                     </ul>
                                     <p className="text-gray-400 leading-relaxed mt-4">
-                                        Төлбөр буцаах хүсэлтийг support@mondev.mn хаягаар илгээнэ үү.
+                                        Төлбөр буцаах хүсэлтийг jawhacntwt@gmail.com хаягаар илгээнэ үү.
                                     </p>
                                 </div>
                             </section>
@@ -204,8 +204,7 @@ export default function TermsPage() {
                                 </p>
                                 <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
                                     <p className="text-gray-300">
-                                        <strong>И-мэйл:</strong> legal@mondev.mn<br />
-                                        <strong>Хаяг:</strong> Улаанбаатар хот, Сүхбаатар дүүрэг, Монгол Улс
+                                        <strong>И-мэйл:</strong> jawhacntwt@gmail.com
                                     </p>
                                 </div>
                             </section>

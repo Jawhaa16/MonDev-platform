@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import get_db
 from app.models.user import User, UserType
-from app.schemas.user import UserResponse, UserUpdate
+from app.schemas.user import UserResponse, UserUpdate, PublicUserResponse
 from app.routers.auth import get_current_user
 from typing import List
 from uuid import UUID
@@ -11,7 +11,7 @@ from uuid import UUID
 router = APIRouter()
 
 
-@router.get("/instructors", response_model=List[UserResponse])
+@router.get("/instructors", response_model=List[PublicUserResponse])
 async def get_instructors(
     db: AsyncSession = Depends(get_db)
 ):
@@ -21,7 +21,7 @@ async def get_instructors(
     )
     instructors = result.scalars().all()
     
-    return [UserResponse.from_orm(instructor) for instructor in instructors]
+    return [PublicUserResponse.from_orm(instructor) for instructor in instructors]
 
 
 @router.get("/{user_id}", response_model=UserResponse)
@@ -30,7 +30,7 @@ async def get_user(
     db: AsyncSession = Depends(get_db)
 ):
     """Get user by ID."""
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(select(User).where(User.id == str(user_id)))
     user = result.scalar_one_or_none()
     
     if not user:
