@@ -24,9 +24,9 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str
     GOOGLE_REDIRECT_URI: str
     
-    # QPay
-    QPAY_USERNAME: str
-    QPAY_PASSWORD: str
+    # QPay (Optional - for payment processing)
+    QPAY_USERNAME: str = ""
+    QPAY_PASSWORD: str = ""
     QPAY_INVOICE_CODE: str = "MONDEV_INVOICE"
     QPAY_API_URL: str = "https://merchant.qpay.mn/v2"
     
