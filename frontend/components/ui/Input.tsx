@@ -1,3 +1,7 @@
+'use client'
+
+import { useState } from 'react'
+
 interface InputProps {
     label?: string
     type?: string
@@ -25,6 +29,8 @@ export default function Input({
     helperText,
     min
 }: InputProps) {
+    const isPasswordField = type === 'password'
+
     return (
         <div className="w-full">
             {label && (

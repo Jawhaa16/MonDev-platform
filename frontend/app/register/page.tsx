@@ -1,81 +1,26 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { useState } from 'react'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import Card from '@/components/ui/Card'
+import Link from 'next/link'
 
 export default function RegisterPage() {
-    const router = useRouter()
     const [userType, setUserType] = useState<'viewer' | 'instructor'>('viewer')
     const [isLoading, setIsLoading] = useState(false)
-    const [isLoggedIn, setIsLoggedIn] = useState(false)
-    const [currentUserType, setCurrentUserType] = useState<string | null>(null)
 
-    useEffect(() => {
-        const token = localStorage.getItem('access_token')
-        const userStr = localStorage.getItem('user')
-        if (token && userStr) {
-            setIsLoggedIn(true)
-            try {
-                const user = JSON.parse(userStr)
-                setCurrentUserType(user.user_type)
-            } catch (e) {
-                console.error('Error parsing user data', e)
-            }
-        }
-    }, [])
-
-    const handleGoogleRegister = async () => {
+    const handleGoogleRegister = () => {
         setIsLoading(true)
-
-        // Google OAuth URL - redirects to frontend callback
         const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
             `client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&` +
             `redirect_uri=${encodeURIComponent(process.env.NEXT_PUBLIC_FRONTEND_URL + '/auth/callback')}&` +
             `response_type=code&` +
             `scope=openid email profile&` +
             `access_type=offline&` +
-            `state=${userType}`
-
+            `state=${userType}&` +
+            `prompt=select_account`
         window.location.href = googleAuthUrl
-    }
-
-    if (isLoggedIn) {
-        return (
-            <>
-                <Header />
-                <main className="min-h-screen bg-black pt-24 pb-12 px-4 flex items-center justify-center">
-                    <div className="max-w-md w-full text-center">
-                        <div className="bg-gray-900 p-8 rounded-2xl border border-gray-800 shadow-2xl">
-                            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-
-                            <h1 className="text-2xl font-bold text-white mb-4">
-                                Та аль хэдийн бүртгүүлсэн байна
-                            </h1>
-
-                            <p className="text-gray-400 mb-8">
-                                Та системд нэвтэрсэн байна. Dashboard руу шилжинэ үү.
-                            </p>
-
-                            <Link
-                                href={currentUserType === 'instructor' ? '/instructor' : '/profile'}
-                                className="inline-block w-full px-6 py-3 bg-accent text-white rounded-lg font-semibold hover:bg-blue-600 transition-all"
-                            >
-                                Dashboard руу очих
-                            </Link>
-                        </div>
-                    </div>
-                </main>
-                <Footer />
-            </>
-        )
     }
 
     return (
@@ -100,32 +45,32 @@ export default function RegisterPage() {
                                 </label>
 
                                 <div className="grid grid-cols-2 gap-4">
-                                    {/* Viewer Option */}
                                     <button
                                         onClick={() => setUserType('viewer')}
+                                        type="button"
                                         className={`
-                      p-6 rounded-xl border-2 transition-all
-                      ${userType === 'viewer'
+                                            p-6 rounded-xl border-2 transition-all
+                                            ${userType === 'viewer'
                                                 ? 'border-accent bg-accent/10'
                                                 : 'border-gray-700 hover:border-gray-600'
                                             }
-                    `}
+                                        `}
                                     >
                                         <div className="text-4xl mb-3">👨‍🎓</div>
                                         <div className="font-semibold mb-1">Суралцагч</div>
                                         <div className="text-sm text-gray-400">Хичээл үзэх</div>
                                     </button>
 
-                                    {/* Instructor Option */}
                                     <button
                                         onClick={() => setUserType('instructor')}
+                                        type="button"
                                         className={`
-                      p-6 rounded-xl border-2 transition-all
-                      ${userType === 'instructor'
+                                            p-6 rounded-xl border-2 transition-all
+                                            ${userType === 'instructor'
                                                 ? 'border-accent bg-accent/10'
                                                 : 'border-gray-700 hover:border-gray-600'
                                             }
-                    `}
+                                        `}
                                     >
                                         <div className="text-4xl mb-3">👨‍🏫</div>
                                         <div className="font-semibold mb-1">Багш</div>
@@ -161,20 +106,10 @@ export default function RegisterPage() {
                                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                                 </svg>
                                 <span>
-                                    {isLoading ? 'Уншиж байна...' : 'Google-ээр бүртгүүлэх'}
+                                    Google-ээр бүртгүүлэх
                                 </span>
                             </button>
 
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-700"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-gray-800 text-gray-400">Эсвэл</span>
-                                </div>
-                            </div>
-
-                            {/* Login Link */}
                             <div className="text-center text-sm text-gray-400">
                                 <p>
                                     Аль хэдийн бүртгэлтэй юу?{' '}

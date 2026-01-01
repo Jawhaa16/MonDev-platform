@@ -55,3 +55,5 @@ class TokenResponse(BaseModel):
 class GoogleAuthRequest(BaseModel):
     code: str
     user_type: UserType
+    redirect_uri: Optional[str] = None
+

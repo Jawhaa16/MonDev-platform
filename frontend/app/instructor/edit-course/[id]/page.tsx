@@ -141,7 +141,7 @@ export default function EditCoursePage({ params }: { params: { id: string } }) {
 
         try {
             const result = await uploadImage(file)
-            setFormData({ ...formData, thumbnail_url: `http://localhost:8000${result.url}` })
+            setFormData({ ...formData, thumbnail_url: result.url })
             toast.success('Зураг амжилттай хуулагдлаа')
         } catch (error: any) {
             console.error('Failed to upload thumbnail:', error)

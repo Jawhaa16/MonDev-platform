@@ -1,29 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
-import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
+import Link from 'next/link'
 
 export default function LoginPage() {
-    const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
 
-    const handleGoogleLogin = async () => {
+    const handleGoogleLogin = () => {
         setIsLoading(true)
-
-        // Google OAuth URL - redirects to frontend callback
         const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
             `client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&` +
             `redirect_uri=${encodeURIComponent(process.env.NEXT_PUBLIC_FRONTEND_URL + '/auth/callback')}&` +
             `response_type=code&` +
             `scope=openid email profile&` +
             `access_type=offline&` +
-            `state=viewer`
-
+            `state=viewer&` +
+            `prompt=select_account`
         window.location.href = googleAuthUrl
     }
 
@@ -55,20 +50,10 @@ export default function LoginPage() {
                                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                                 </svg>
                                 <span>
-                                    {isLoading ? 'Уншиж байна...' : 'Google-ээр нэвтрэх'}
+                                    Google-ээр нэвтрэх
                                 </span>
                             </button>
 
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-700"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-gray-800 text-gray-400">Эсвэл</span>
-                                </div>
-                            </div>
-
-                            {/* Info */}
                             <div className="text-center text-sm text-gray-400">
                                 <p>
                                     Бүртгэлгүй юу?{' '}
@@ -76,21 +61,6 @@ export default function LoginPage() {
                                         Бүртгүүлэх
                                     </Link>
                                 </p>
-                            </div>
-
-                            {/* Security Info */}
-                            <div className="mt-8 p-4 bg-gray-900 rounded-lg border border-gray-700">
-                                <div className="flex items-start space-x-3">
-                                    <svg className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                    </svg>
-                                    <div className="text-sm text-gray-400">
-                                        <p className="font-semibold text-white mb-1">Аюулгүй байдал</p>
-                                        <p>
-                                            Таны Gmail мэдээлэл 256-bit шифрлэлттэй хадгалагдана. Бид таны нууц үгийг хэзээ ч хадгалдаггүй.
-                                        </p>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </Card>

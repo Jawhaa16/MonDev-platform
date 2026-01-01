@@ -163,7 +163,7 @@ export default function ContactPage() {
                                     </div>
                                     <h3 className="text-lg font-bold text-white mb-2">И-мэйл</h3>
                                     <a href="mailto:support@mondev.mn" className="text-gray-400 hover:text-accent transition-colors">
-                                        support@mondev.mn
+                                        jawhacntwt@gmail.com
                                     </a>
                                 </div>
 
@@ -176,7 +176,8 @@ export default function ContactPage() {
                                     </div>
                                     <h3 className="text-lg font-bold text-white mb-2">Утас</h3>
                                     <a href="tel:+97677000000" className="text-gray-400 hover:text-accent transition-colors">
-                                        +976 7700-0000
+                                        +976 96215552,
+                                        +976 95730294
                                     </a>
                                 </div>
 

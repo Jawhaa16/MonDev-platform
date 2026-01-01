@@ -57,7 +57,7 @@ export default function AddVideoModal({
             const result = await uploadVideo(file, (progress) => {
                 setUploadProgress(progress)
             })
-            setFormData({ ...formData, video_url: `http://localhost:8000${result.url}` })
+            setFormData({ ...formData, video_url: result.url })
         } catch (error: any) {
             console.error('Failed to upload video:', error)
             const errorMessage = error.response?.data?.detail || error.message || 'Видео upload хийхэд алдаа гарлаа'
@@ -80,7 +80,7 @@ export default function AddVideoModal({
 
         try {
             const result = await uploadImage(file)
-            setFormData({ ...formData, thumbnail_url: `http://localhost:8000${result.url}` })
+            setFormData({ ...formData, thumbnail_url: result.url })
         } catch (error: any) {
             console.error('Failed to upload thumbnail:', error)
             const errorMessage = error.response?.data?.detail || error.message || 'Thumbnail upload хийхэд алдаа гарлаа'
@@ -168,15 +168,25 @@ export default function AddVideoModal({
                     </div>
 
                     {!useFileUpload ? (
-                        <Input
-                            label="Видеоны холбоос (URL)"
-                            type="url"
-                            value={formData.video_url}
-                            onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                            placeholder="https://youtube.com/watch?v=... эсвэл бусад"
-                            required
-                            helperText="YouTube, Vimeo эсвэл өөр видео платформын холбоос оруулна уу"
-                        />
+                        <div className="space-y-4">
+                            <Input
+                                label="Видеоны холбоос (URL)"
+                                type="url"
+                                value={formData.video_url}
+                                onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                                placeholder="https://youtube.com/watch?v=... эсвэл бусад"
+                                required
+                                helperText="YouTube, Vimeo эсвэл өөр видео платформын холбоос оруулна уу"
+                            />
+                            {formData.video_url && formData.video_url.includes('youtube.com') || formData.video_url.includes('youtu.be') ? (
+                                <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-center gap-3">
+                                    <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                                    </svg>
+                                    <span className="text-sm text-gray-300">YouTube видео илэрлээ. Embed тоглуулагчаар тоглогдох болно.</span>
+                                </div>
+                            ) : null}
+                        </div>
                     ) : (
                         <div>
                             <label className="block text-sm font-medium text-gray-400 mb-2">

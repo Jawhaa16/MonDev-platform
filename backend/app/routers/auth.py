@@ -96,7 +96,8 @@ async def google_callback(
 ):
     """Handle Google OAuth callback and create/login user."""
     print(f"Received Google Callback with code: {auth_data.code[:10]}...")
-    print(f"Using Redirect URI: {settings.GOOGLE_REDIRECT_URI}")
+    redirect_uri = auth_data.redirect_uri or settings.GOOGLE_REDIRECT_URI
+    print(f"Using Redirect URI: {redirect_uri}")
     
     # Exchange authorization code for tokens
     async with httpx.AsyncClient() as client:
@@ -106,7 +107,7 @@ async def google_callback(
                 'code': auth_data.code,
                 'client_id': settings.GOOGLE_CLIENT_ID,
                 'client_secret': settings.GOOGLE_CLIENT_SECRET,
-                'redirect_uri': settings.GOOGLE_REDIRECT_URI,
+                'redirect_uri': redirect_uri,
                 'grant_type': 'authorization_code'
             }
         )

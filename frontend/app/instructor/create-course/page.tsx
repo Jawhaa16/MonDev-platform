@@ -37,7 +37,7 @@ export default function CreateCoursePage() {
 
         try {
             const result = await uploadImage(file)
-            setFormData({ ...formData, thumbnail_url: `http://localhost:8000${result.url}` })
+            setFormData({ ...formData, thumbnail_url: result.url })
             toast.success('Зураг амжилттай хуулагдлаа')
         } catch (error) {
             console.error('Failed to upload thumbnail:', error)

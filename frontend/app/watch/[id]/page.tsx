@@ -113,6 +113,13 @@ export default function VideoPlayerPage() {
         toast.success('Линк хуулагдлаа')
     }
 
+    const getYouTubeEmbedUrl = (url: string) => {
+        if (!url) return null
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+        const match = url.match(regExp)
+        return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null
+    }
+
     if (loading) {
         return (
             <>
@@ -147,6 +154,8 @@ export default function VideoPlayerPage() {
         )
     }
 
+    const youtubeEmbedUrl = currentVideo ? getYouTubeEmbedUrl(currentVideo.video_url) : null
+
     return (
         <>
             <Header />
@@ -158,17 +167,28 @@ export default function VideoPlayerPage() {
                         <div className="lg:col-span-2">
                             <Card padding="sm" className="mb-6">
                                 {/* Video Container */}
-                                <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
-                                    <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900 rounded-lg flex items-center justify-center">
+                                <div className="relative w-full overflow-hidden rounded-lg bg-gray-900" style={{ paddingTop: '56.25%' }}>
+                                    <div className="absolute inset-0 flex items-center justify-center">
                                         {currentVideo?.video_url ? (
-                                            <video
-                                                controls
-                                                className="w-full h-full"
-                                                src={currentVideo.video_url}
-                                                poster={currentVideo.thumbnail_url}
-                                            >
-                                                Таны browser видео тоглуулагчийг дэмжихгүй байна.
-                                            </video>
+                                            youtubeEmbedUrl ? (
+                                                <iframe
+                                                    className="w-full h-full"
+                                                    src={youtubeEmbedUrl}
+                                                    title={currentVideo.title}
+                                                    frameBorder="0"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowFullScreen
+                                                ></iframe>
+                                            ) : (
+                                                <video
+                                                    controls
+                                                    className="w-full h-full"
+                                                    src={currentVideo.video_url}
+                                                    poster={currentVideo.thumbnail_url}
+                                                >
+                                                    Таны browser видео тоглуулагчийг дэмжихгүй байна.
+                                                </video>
+                                            )
                                         ) : (
                                             <div className="text-center">
                                                 <svg className="w-20 h-20 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

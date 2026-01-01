@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import api from '@/lib/api'
 
@@ -10,25 +10,40 @@ function AuthCallbackContent() {
     const [error, setError] = useState<string | null>(null)
     const [isProcessing, setIsProcessing] = useState(true)
 
+    const processedRef = useRef(false)
+
     useEffect(() => {
         const handleCallback = async () => {
             const code = searchParams.get('code')
             const state = searchParams.get('state')
             const errorParam = searchParams.get('error')
 
+            // If already processed or no code, skip
+            if (processedRef.current) return
+            // If code is present, mark as processed to prevent double execution
+            if (code) {
+                processedRef.current = true
+            }
+
             // Handle OAuth errors
             if (errorParam) {
                 setError('Нэвтрэх үйлдэл цуцлагдлаа')
                 setIsProcessing(false)
-                // setTimeout(() => router.push('/login'), 3000)
                 return
             }
 
             // Validate code
             if (!code) {
+                // Only set error if we haven't processed (though the check above handles typical cases)
+                // If we are here, it means no code and not processed.
+                // But wait, if searchParams change, this effect runs again.
+                // We shouldn't set error immediately if code is missing on first render? 
+                // Actually searchParams should be ready.
+
+                // Let's keep logic simple: if no code, it's an error only if we expected it.
+                // But this page is ONLY for callback.
                 setError('Алдаа гарлаа. Дахин оролдоно уу.')
                 setIsProcessing(false)
-                // setTimeout(() => router.push('/login'), 3000)
                 return
             }
 
@@ -36,7 +51,8 @@ function AuthCallbackContent() {
                 // Exchange code for tokens
                 const response = await api.post('/api/auth/google/callback', {
                     code,
-                    user_type: state || 'viewer' // default to viewer
+                    user_type: state || 'viewer', // default to viewer
+                    redirect_uri: process.env.NEXT_PUBLIC_FRONTEND_URL + '/auth/callback'
                 })
 
                 const { access_token, refresh_token, user } = response.data
@@ -54,6 +70,9 @@ function AuthCallbackContent() {
                 }
             } catch (err: any) {
                 console.error('OAuth callback error:', err)
+                // Reset processed ref in case of network error so user can try again? 
+                // No, code is one-time use. We cannot retry with same code.
+
                 let errorMessage = 'Нэвтрэх үед алдаа гарлаа. Дахин оролдоно уу.'
                 if (err.response?.data?.detail) {
                     if (typeof err.response.data.detail === 'string') {
@@ -64,8 +83,6 @@ function AuthCallbackContent() {
                 }
                 setError(errorMessage)
                 setIsProcessing(false)
-                setIsProcessing(false)
-                // setTimeout(() => router.push('/login'), 3000)
             }
         }
 
