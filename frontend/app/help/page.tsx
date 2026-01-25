@@ -216,7 +216,7 @@ export default function HelpPage() {
                                     Холбоо барих
                                 </a>
                                 <a
-                                    href="mailto:support@mondev.mn"
+                                    href="mailto:jawhactwt@gmail.com"
                                     className="inline-block px-8 py-4 bg-white/10 text-white rounded-lg font-bold hover:bg-white/20 transition-colors border-2 border-white"
                                 >
                                     И-мэйл илгээх

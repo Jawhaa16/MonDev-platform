@@ -259,7 +259,7 @@ Copyright © 2025 MonDev.mn. All rights reserved.
 ## 📞 Contact
 
 - Website: https://mondev.mn
-- Email: contact@mondev.mn
+- Email: jawhactwt@gmail.com
 
 ---
 

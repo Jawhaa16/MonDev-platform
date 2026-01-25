@@ -190,8 +190,8 @@ export default function PrivacyPage() {
                                 </p>
                                 <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
                                     <p className="text-gray-300">
-                                        <strong>И-мэйл:</strong> privacy@mondev.mn<br />
-                                        <strong>Хаяг:</strong> Улаанбаатар хот, Сүхбаатар дүүрэг, Монгол Улс
+                                        <strong>И-мэйл:</strong> jawhactwt@gmail.com<br />
+                                        <strong>Хаяг:</strong> Дорнод аймаг Чойбалсан хот
                                     </p>
                                 </div>
                             </section>

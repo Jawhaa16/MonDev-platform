@@ -162,8 +162,8 @@ export default function ContactPage() {
                                         </svg>
                                     </div>
                                     <h3 className="text-lg font-bold text-white mb-2">И-мэйл</h3>
-                                    <a href="mailto:support@mondev.mn" className="text-gray-400 hover:text-accent transition-colors">
-                                        jawhacntwt@gmail.com
+                                    <a href="mailto:jawhactwt@gmail.com" className="text-gray-400 hover:text-accent transition-colors">
+                                        jawhactwt@gmail.com
                                     </a>
                                 </div>
 
@@ -191,7 +191,7 @@ export default function ContactPage() {
                                     </div>
                                     <h3 className="text-lg font-bold text-white mb-2">Хаяг</h3>
                                     <p className="text-gray-400">
-                                        Тогтсон хаяг байхгүй
+                                        Дорнод аймаг Чойбалсан хот
                                     </p>
                                 </div>
 
